@@ -1,0 +1,15 @@
+{
+  "name": "marketing-engine",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "lint": "eslint src --max-warnings 0 --no-error-on-unmatched-pattern",
+    "check:imports": "node tools/check-imports.mjs",
+    "check": "npm run lint && npm run check:imports && node --test tools/import-boundaries.test.mjs"
+  },
+  "devDependencies": {
+    "@typescript-eslint/parser": "8.59.2",
+    "eslint": "10.9.1",
+    "typescript": "5.9.3"
+  }
+}

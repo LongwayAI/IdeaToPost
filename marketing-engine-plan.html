@@ -1,0 +1,440 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>Marketing engine implementation plan</title>
+  <style>
+    :root {
+      --paper: #f8f7f3;
+      --card: #fffefa;
+      --ink: #242239;
+      --muted: #57566a;
+      --rule: #dfdce6;
+      --accent: #513799;
+      --accent-soft: #eee9fa;
+      --accent-edge: #dbd1f0;
+      --gold-bg: #fff5df;
+      --gold-edge: #ead5a0;
+      --gold-ink: #704915;
+      --sans: Inter, 'Segoe UI', system-ui, sans-serif;
+      --serif: 'Instrument Serif', Georgia, serif;
+      --mono: 'IBM Plex Mono', Consolas, monospace;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-padding-top: 1.25rem; }
+    body { margin: 0; background: var(--paper); color: var(--ink); font: 1rem/1.62 var(--sans); }
+    a { color: var(--accent); text-underline-offset: .2em; }
+    a:hover { color: #362270; }
+    a:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: 2px; }
+    .skip { position: absolute; left: 1rem; top: 1rem; z-index: 1; transform: translateY(-200%); background: var(--card); padding: .5rem .8rem; }
+    .skip:focus { transform: translateY(0); }
+    .top { border-bottom: 1px solid var(--rule); }
+    .top-inner, .page, .footer-inner { width: min(100% - 3rem, 75rem); margin-inline: auto; }
+    .top-inner { min-height: 4.25rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+    .brand { display: flex; align-items: center; gap: .7rem; font-size: .9rem; font-weight: 700; }
+    .brand-mark { display: grid; grid-template-columns: repeat(2, 4px); grid-template-rows: repeat(2, 4px); gap: 3px; padding: 9px; background: var(--accent); border-radius: 7px; }
+    .brand-mark i { background: #fff; border-radius: 1px; }
+    .brand-mark i:last-child { opacity: .55; }
+    .repo { font-size: .85rem; font-weight: 650; }
+    .page { padding-block: 2rem 4rem; }
+    .hero { display: grid; grid-template-columns: minmax(0, 1.65fr) minmax(0, 1fr); gap: clamp(2rem, 5vw, 4.5rem); align-items: center; padding: clamp(2rem, 5.8vw, 4.65rem); border: 1px solid var(--accent-edge); border-radius: 1.2rem; background: #f1edf9; }
+    .eyebrow { display: block; color: var(--accent); font-size: .73rem; font-weight: 750; letter-spacing: .095em; text-transform: uppercase; }
+    h1, h2 { font-family: var(--serif); font-weight: 400; line-height: 1.04; }
+    h1 { margin: .55rem 0 .95rem; font-size: clamp(2.8rem, 5.8vw, 5.35rem); letter-spacing: -.055em; }
+    .hero p { max-width: 32rem; margin: 0; color: var(--muted); font-size: clamp(1.03rem, 1.6vw, 1.16rem); }
+    .hero-flow { list-style: none; margin: 0; padding: .35rem 1.35rem; border: 1px solid var(--accent-edge); border-radius: .8rem; background: #faf8fe; }
+    .hero-flow li { display: grid; grid-template-columns: .6rem minmax(0, 1fr); gap: .8rem; align-items: start; padding: .75rem 0; }
+    .hero-flow li + li { border-top: 1px solid #e6dff2; }
+    .hero-flow li::before { content: ''; inline-size: .5rem; block-size: .5rem; margin-top: .52rem; border-radius: 50%; background: #8568c2; }
+    .hero-flow li:nth-child(3)::before { background: var(--accent); }
+    .hero-flow strong, .hero-flow small { display: block; }
+    .hero-flow strong { font-size: .88rem; }
+    .hero-flow small { font-size: .8rem; color: var(--muted); line-height: 1.45; }
+    .layout { display: grid; grid-template-columns: 11rem minmax(0, 1fr); gap: clamp(2rem, 5vw, 4.7rem); margin-top: 3rem; align-items: start; }
+    .toc { position: sticky; top: 1.5rem; padding-top: .2rem; }
+    .toc ul { list-style: none; margin: .65rem 0 0; padding: 0 0 0 .9rem; border-left: 1px solid var(--accent-edge); }
+    .toc a { display: block; padding: .4rem 0; color: var(--muted); font-size: .88rem; text-decoration: none; }
+    .toc a:hover { color: var(--accent); text-decoration: underline; }
+    main { min-width: 0; }
+    main > section + section { border-top: 1px solid var(--rule); margin-top: 2.7rem; padding-top: 2.7rem; }
+    h2 { margin: .38rem 0 1rem; font-size: clamp(2.05rem, 4vw, 3.1rem); letter-spacing: -.045em; }
+    h3 { margin: 0 0 .35rem; font-size: 1rem; line-height: 1.35; }
+    p { margin: 0 0 .85rem; }
+    .intro { max-width: 73ch; color: var(--muted); }
+    .cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .8rem; margin-block: 1.15rem; }
+    .card { padding: 1.1rem; border: 1px solid var(--rule); border-radius: .75rem; background: var(--card); }
+    .card > :last-child { margin-bottom: 0; }
+    .card .format { margin-bottom: .32rem; color: var(--accent); font-size: .79rem; font-weight: 700; }
+    .card p, .callout p, .rules p { font-size: .92rem; }
+    .refs { display: flex; flex-wrap: wrap; gap: .2rem .65rem; margin-top: .55rem; font-size: .79rem !important; line-height: 1.45; }
+    .callout { padding: .95rem 1.15rem; margin-block: 1.1rem; background: var(--gold-bg); border: 1px solid var(--gold-edge); border-radius: .7rem; }
+    .callout h3 { color: var(--gold-ink); }
+    .callout > :last-child { margin-bottom: 0; }
+    .steps { padding-left: 1.45rem; margin: 1.25rem 0 0; }
+    .steps li { margin-bottom: .7rem; padding-left: .25rem; }
+    .steps li::marker { color: var(--accent); font-weight: 750; }
+    .split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 1rem; align-items: start; margin-block: 1.1rem; }
+    pre { overflow: auto; margin: 0; padding: 1rem 1.2rem; border: 1px solid var(--accent-edge); border-radius: .75rem; background: #f1eef8; color: #31264d; font: .86rem/1.65 var(--mono); tab-size: 2; }
+    code { font-family: var(--mono); font-size: .88em; }
+    pre code { font-size: 1em; }
+    :not(pre) > code { background: #efecf5; padding: .08em .25em; border-radius: 3px; overflow-wrap: anywhere; }
+    .owners { margin: 0; font-size: .91rem; }
+    .owners div { display: grid; grid-template-columns: minmax(6.8rem, .7fr) minmax(0, 1.5fr); gap: .6rem; padding: .43rem 0; }
+    .owners div + div { border-top: 1px solid var(--rule); }
+    .owners dt { font-weight: 700; }
+    .owners dd { margin: 0; color: var(--muted); }
+    .rules { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 1.25rem; row-gap: .25rem; margin-block: 1.25rem .75rem; }
+    .rules > div { border-top: 1px solid var(--rule); padding-top: .78rem; }
+    .fine { font-size: .88rem; color: var(--muted); }
+    .table-wrap { overflow-x: auto; margin-block: .75rem 1rem; border: 1px solid var(--rule); border-radius: .72rem; background: var(--card); }
+    table { width: 100%; border-collapse: collapse; font-size: .88rem; line-height: 1.5; }
+    th, td { text-align: left; vertical-align: top; padding: .75rem .9rem; overflow-wrap: anywhere; }
+    thead th { background: var(--accent-soft); color: #422e76; font-size: .79rem; }
+    tbody tr + tr { border-top: 1px solid var(--rule); }
+    tbody th { width: 18%; }
+    table code { display: inline; }
+    .metric-table tbody th { width: 16%; }
+    .code-block { margin: .85rem 0 1rem; }
+    .subhead { margin-top: 1.3rem; }
+    figure { margin: 0; }
+    figcaption { margin-bottom: .6rem; }
+    .bars { margin: .75rem 0 0; padding: 0; list-style: none; }
+    .bars li { display: grid; grid-template-columns: 5.4rem minmax(0, 1fr) 1.7rem; gap: .45rem; align-items: center; margin-top: .45rem; font-size: .82rem; }
+    .bars .track { background: var(--accent-soft); block-size: .65rem; border-radius: .2rem; }
+    .bars .fill { display: block; inline-size: var(--value); block-size: 100%; background: #7658b3; border-radius: .2rem; }
+    .bars strong { text-align: right; font-variant-numeric: tabular-nums; }
+    .milestones { list-style: none; margin: 1.15rem 0 0; padding: 0; border-top: 1px solid var(--rule); }
+    .milestones li { display: grid; grid-template-columns: 9rem minmax(0, 1fr); gap: 1rem; padding: .8rem 0; border-bottom: 1px solid var(--rule); }
+    .milestones strong { color: var(--accent); }
+    footer { border-top: 1px solid var(--rule); color: var(--muted); }
+    .footer-inner { padding-block: 1.15rem 1.6rem; font-size: .82rem; }
+    .footer-inner p { max-width: 92ch; margin-bottom: .4rem; }
+    @media (max-width: 62rem) {
+      .layout { grid-template-columns: 8.6rem minmax(0, 1fr); gap: 1.65rem; }
+      .cards { gap: .6rem; }
+      .card { padding: .85rem; }
+    }
+    @media (max-width: 49rem) {
+      .hero, .layout { grid-template-columns: minmax(0, 1fr); }
+      .hero { gap: 1.5rem; }
+      .layout { margin-top: 1.5rem; }
+      .toc { position: static; border-bottom: 1px solid var(--rule); padding-bottom: .55rem; }
+      .toc ul { display: flex; flex-wrap: wrap; gap: 0 1rem; border: 0; padding: 0; margin: .3rem 0 0; }
+    }
+    @media (max-width: 37rem) {
+      .top-inner, .page, .footer-inner { width: calc(100% - 1.6rem); }
+      .page { padding-top: .85rem; }
+      .hero { padding: 1.35rem; }
+      .cards, .split, .rules { grid-template-columns: minmax(0, 1fr); }
+      .milestones li { grid-template-columns: minmax(0, 1fr); gap: .15rem; }
+      th, td { padding: .58rem .46rem; }
+      table { font-size: .79rem; }
+      thead th { font-size: .74rem; }
+      main > section + section { margin-top: 2rem; padding-top: 2rem; }
+    }
+    @media print {
+      .toc, .skip { display: none; }
+      body { background: white; font-size: 10pt; }
+      .top-inner, .page, .footer-inner { width: 100%; }
+      .layout { display: block; }
+      .hero { padding: 1.25rem; }
+      .card, .callout, pre, tr, .milestones li { break-inside: avoid; }
+      h2, h3 { break-after: avoid; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to the plan</a>
+  <header class="top">
+    <div class="top-inner">
+      <div class="brand"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span>LongwayAI</div>
+      <a class="repo" href="https://github.com/LongwayAI/marketing-engine">GitHub repository ↗</a>
+    </div>
+  </header>
+  <div class="page">
+    <div class="hero">
+      <div>
+        <span class="eyebrow">Implementation plan</span>
+        <h1>Marketing engine</h1>
+        <p>Turn one source into a LinkedIn article, an X post, or a YouTube video. Give a human the final review and publish action. Add platform feedback once the publishing workflow works.</p>
+      </div>
+      <ol class="hero-flow" role="list" aria-label="Content workflow">
+        <li><div><strong>Add a source</strong><small>Save the material and digest its key claims.</small></div></li>
+        <li><div><strong>Produce drafts</strong><small>Generate content for the selected platforms.</small></div></li>
+        <li><div><strong>Review and publish</strong><small>Approve the revision and choose the destination.</small></div></li>
+        <li><div><strong>Measure performance</strong><small>See where content loses reach or engagement.</small></div></li>
+      </ol>
+    </div>
+    <div class="layout">
+      <nav class="toc" aria-label="Plan sections">
+        <span class="eyebrow">On this page</span>
+        <ul>
+          <li><a href="#publishing">Stage 1 · Publishing</a></li>
+          <li><a href="#skills">Skill settings</a></li>
+          <li><a href="#architecture">Feature architecture</a></li>
+          <li><a href="#cli">CLI and feature map</a></li>
+          <li><a href="#analytics">Stage 2 · Analytics</a></li>
+          <li><a href="#delivery">Build sequence</a></li>
+        </ul>
+      </nav>
+      <main id="main" tabindex="-1">
+        <section id="publishing" aria-labelledby="publishing-title">
+          <span class="eyebrow">Stage 1</span>
+          <h2 id="publishing-title">Produce, review, and publish</h2>
+          <p class="intro">Start with pasted text and Markdown or plain-text uploads. Save the original and a reusable digest with source references, key claims, and uncertainties. Choose one or more platforms and click <strong>Produce</strong>. Each platform gets its own generation job so you can retry one draft independently.</p>
+          <div class="cards">
+            <article class="card">
+              <p class="format">LinkedIn</p>
+              <h3>Long-form article</h3>
+              <p>Generate a headline, formatted body, and optional cover. Let the reviewer edit and preview the full article before handing it to LinkedIn's editor.</p>
+              <p class="refs"><a href="https://www.linkedin.com/help/linkedin/answer/a522427">LinkedIn article editor</a></p>
+            </article>
+            <article class="card">
+              <p class="format">X</p>
+              <h3>Single post</h3>
+              <p>Generate editable copy with an optional link and validate X's weighted character count. Publish through <code>POST /2/tweets</code> with user OAuth and an enabled developer app.</p>
+              <p class="refs"><a href="https://docs.x.com/x-api/posts/create-post">Create post</a><a href="https://docs.x.com/fundamentals/counting-characters">Character counting</a><a href="https://docs.x.com/fundamentals/authentication/guides/v2-authentication-mapping">OAuth scopes</a></p>
+            </article>
+            <article class="card">
+              <p class="format">YouTube</p>
+              <h3>Playable video</h3>
+              <p>Run a saved video skill through the configured Claude or Codex runner. Review the rendered MP4, title, description, visibility, and required disclosures before a resumable upload.</p>
+              <p class="refs"><a href="https://developers.google.com/youtube/data/reference/rest/v3/videos/insert">Video upload</a><a href="https://developers.google.com/youtube/data/guides/using_resumable_upload_protocol">Resumable upload</a></p>
+            </article>
+          </div>
+          <aside class="callout" aria-labelledby="linkedin-gate">
+            <h3 id="linkedin-gate">LinkedIn native publishing needs an access check</h3>
+            <p>LinkedIn's documented Posts API creates a feed card for an existing article URL. Verify native article creation with the intended app and LinkedIn identity before enabling one-click publishing for that format. Until then, offer <strong>Copy article</strong> and <strong>Open LinkedIn editor</strong>, then let the reviewer record the published URL. Hosting the article and publishing a link post would be a separate product decision.</p>
+            <p class="refs"><a href="https://learn.microsoft.com/en-us/linkedin/marketing/community-management/shares/posts-api?view=li-lms-2026-09#article-post-creation-sample-request">LinkedIn Posts API</a><a href="https://learn.microsoft.com/en-us/linkedin/marketing/increasing-access?view=li-lms-2026-09">LinkedIn API access</a></p>
+          </aside>
+          <ol class="steps">
+            <li><strong>Review the exact revision.</strong> Show the article, post, or playable video with its metadata. An edit creates a new revision that requires approval. Save who approved each revision and when.</li>
+            <li><strong>Connect the account.</strong> Use provider OAuth where the app has access. Display the actual profile, Page, or channel and the granted capabilities. Keep tokens encrypted on the server and show when an account needs to reconnect.</li>
+            <li><strong>Publish to the selected destination.</strong> Show the account and video visibility before the click. In one transaction, check the current revision and approval, verify the destination, and reserve a job unique to the revision and destination. The job keeps the approved payload and chosen settings.</li>
+            <li><strong>Show the receipt.</strong> A repeated click returns the existing job. Show queue, upload or processing, publication, and failure states. Save the remote ID and URL on success. After a timeout with an unknown outcome, check the provider or ask the operator to reconcile it before another create attempt.</li>
+          </ol>
+        </section>
+        <section id="skills" aria-labelledby="skills-title">
+          <h2 id="skills-title">Save and configure production skills</h2>
+          <p class="intro">Use direct model calls for the source digest and text drafts. For YouTube, reuse the tested video skill in a server worker. Package <code>SKILL.md</code> with the scripts, references, and assets it needs. The worker stages the same package for either runner and validates the resulting video.</p>
+          <div class="split">
+            <div class="card">
+              <h3>Claude Agent SDK</h3>
+              <p>Stage the saved revision under <code>.claude/skills/</code> in the job workspace. Load project skills and invoke the selected skill by name.</p>
+              <p class="refs"><a href="https://code.claude.com/docs/en/agent-sdk/skills">Claude Agent SDK skill loading</a></p>
+            </div>
+            <div class="card">
+              <h3>Codex SDK</h3>
+              <p>Stage the same revision under <code>.agents/skills/</code>. Run Codex in the job workspace with an explicit skill reference. Verify skill loading and invocation with the SDK version the worker ships.</p>
+              <p class="refs"><a href="https://learn.chatgpt.com/docs/build-skills">Codex skill discovery</a><a href="https://github.com/openai/codex/tree/main/sdk/typescript">Codex TypeScript SDK</a></p>
+            </div>
+          </div>
+          <h3>Settings → Skills</h3>
+          <ol class="steps">
+            <li><strong>Import and edit.</strong> Upload an existing skill package, inspect its files, and edit the instructions or replace supporting files. Save each update as a revision so you can return to an earlier version.</li>
+            <li><strong>Test and select.</strong> Choose Claude or Codex and run the skill on sample assets. Show test results per revision and runner. Select a tested pair as the YouTube default. Show any unavailable tools or incompatible settings before a run.</li>
+            <li><strong>Produce and review.</strong> The job records the skill revision and runner at submission, so later settings edits apply to new jobs. The worker stages the brief and assets in an isolated workspace and returns a playable MP4 and metadata for human review.</li>
+          </ol>
+          <p class="fine">Keep runner credentials on the server. Give skill runs access to their own job files and configured tools. The publishing feature owns account credentials and publishes only an approved draft.</p>
+        </section>
+        <section id="architecture" aria-labelledby="architecture-title">
+          <h2 id="architecture-title">Encode the rules in the repository</h2>
+          <p class="intro">Separate the browser and server at the directory level, then group code by feature within each runtime. The browser calls the server over HTTP. Both sides use API types from <code>src/shared/</code>. The proposed stack is strict TypeScript, Node, React, PostgreSQL-backed jobs, and file storage for rendered assets.</p>
+          <div class="split">
+            <pre aria-label="Proposed repository structure"><code>src/
+  web/
+    features/
+      drafts/
+        route.tsx
+        verify.json
+      skills/
+  server/
+    features/
+      sources/
+      drafts/
+        feature.json
+        public.ts
+        api.ts
+        cli.ts
+        internal/
+      accounts/
+      publishing/
+      skills/
+      analytics/
+  shared/
+    drafts.ts
+    skills.ts
+  style/
+  i18n/
+tools/
+AGENTS.md
+FEATURE_MAP.md</code></pre>
+            <dl class="owners" aria-label="Durable record owners">
+              <div><dt><code>sources</code></dt><dd>Originals and source digests</dd></div>
+              <div><dt><code>drafts</code></dt><dd>Generation jobs, revisions, assets, and approvals</dd></div>
+              <div><dt><code>accounts</code></dt><dd>OAuth connections, capabilities, and tokens</dd></div>
+              <div><dt><code>publishing</code></dt><dd>Publish jobs, attempts, and provider receipts</dd></div>
+              <div><dt><code>skills</code></dt><dd>Skill packages, revisions, runner test results, and defaults</dd></div>
+              <div><dt><code>analytics</code></dt><dd>Metric observations and sync state in Stage 2</dd></div>
+            </dl>
+          </div>
+          <div class="split" aria-label="Agent guidance and automated enforcement">
+            <div class="card">
+              <h3>Guide agents before they write</h3>
+              <p>The root <code>AGENTS.md</code> gives each rule and the pattern to follow. Codex reads it before work. Use the first Produce route as the example. A submit action starts the job, and the route's data query reads its status.</p>
+              <p class="refs"><a href="./AGENTS.md">Repository rules</a><a href="https://learn.chatgpt.com/docs/agent-configuration/agents-md">How Codex loads instructions</a></p>
+            </div>
+            <div class="card">
+              <h3>Make violations fail before merge</h3>
+              <p><code>npm run check</code> runs ESLint, the import graph analyzer, and their regression tests. GitHub Actions runs the same command. Require the <strong>Repository checks</strong> job on the target branch.</p>
+              <p>If violations recur, a Codex hook can reject a generated patch before a supported edit tool writes it.</p>
+              <p class="refs"><a href="https://learn.chatgpt.com/docs/hooks#pretooluse">Codex pre-edit hook</a></p>
+            </div>
+          </div>
+          <div class="rules">
+            <div>
+              <h3>Imports fail in CI</h3>
+              <p>ESLint flags imports across <code>src/web/</code> and <code>src/server/</code> in both directions. The analyzer also checks indirect paths, aliases, re-exports, and type-only dependencies. Shared contracts cannot depend on either runtime.</p>
+              <p>For same-runtime feature dependencies, declare them in <code>feature.json</code> and use the target's <code>public.ts</code>. Add checks for cycles and private feature imports during setup.</p>
+            </div>
+            <div>
+              <h3>Every record has one writer</h3>
+              <p>Keep migrations and write queries under the owner. Limit write access to its private persistence code and check query targets against table ownership. Other features request changes through named commands.</p>
+            </div>
+            <div>
+              <h3>Share design tokens through <code>src/style/</code></h3>
+              <p>Keep font definitions, colors, spacing, and other shared design tokens together. Keep component styles in the feature that owns them and reference the shared tokens. Add style lint checks for raw color and font-family values in feature styles.</p>
+            </div>
+            <div>
+              <h3>Load user-facing text from <code>src/i18n/</code></h3>
+              <p>Store complete messages by locale and resolve them by key. Use parameters for dynamic values. Keep CLI flags, JSON keys, and test IDs stable. Display source material and generated drafts as content.</p>
+              <p>Lint UI text, accessibility labels, errors, and human-readable CLI output for hard-coded copy. In CI, reject unknown keys and check that supported locales have matching keys and message parameters.</p>
+            </div>
+            <div>
+              <h3>Ban React <code>useEffect</code></h3>
+              <p>Use route loaders and actions, derived render state, event handlers, and <code>useSyncExternalStore</code> for external stores. Add a typed ESLint rule that traces direct, aliased, re-exported, and namespace references to React's export.</p>
+            </div>
+            <div>
+              <h3>Ban comments in authored source</h3>
+              <p>Add an ESLint rule that rejects parser-reported comments in authored JS, JSX, TS, and TSX. Keep design rationale in Markdown and disable inline lint configuration. Review exceptions with a named owner, precise scope, and a removal condition.</p>
+            </div>
+          </div>
+          <p class="fine">Tan's Dune example places features under <code>electron-renderer/</code> and desktop duties under <code>electron-main/</code>. Both use types from <code>shared/</code>. The marketing engine applies the same dependency rule to its browser and server. <a href="https://ai.engineer/code/2026/talks/lauren-tan">Tan’s AI Engineer talk</a></p>
+          <p class="fine">Build tooling discovers reserved entrypoint files in each owning feature folder. API handlers, the product CLI, and workers call the same server feature commands.</p>
+          <div class="card" aria-labelledby="timer-case-title">
+            <h3 id="timer-case-title">How a timer workaround spread</h3>
+            <p>Tan’s slide traces a zero-delay timer that fixed a flicker on September 9. By October 3, the pattern had reached a shared module. The slide counts 183 timers on October 17.</p>
+            <p>When a workaround exposes a design problem, fix the underlying behavior and verify it in the running app. If the mistake has a precise signature, add a check that rejects the original example and points to the supported path.</p>
+            <p class="refs"><a href="https://www.youtube.com/watch?v=ZZ19zhYnDKY&amp;t=4126s">Timer example in Tan’s talk</a></p>
+          </div>
+        </section>
+        <section id="cli" aria-labelledby="cli-title">
+          <h2 id="cli-title">Make the CLI the first working interface</h2>
+          <p class="intro">Build the first end-to-end slice with a seeded X account, real persistence, and simulated provider responses. The example commands are the proposed CLI contract. Use the returned IDs and make the same output available as JSON for automated checks.</p>
+          <pre class="code-block" aria-label="Proposed CLI acceptance flow"><code>engine --profile fixture source add --file fixtures/launch.md
+engine --profile fixture produce --source src_01 --platform x --wait
+engine --profile fixture draft show --revision rev_01
+engine --profile fixture draft approve --revision rev_01
+engine --profile fixture publish --revision rev_01 --account x_demo
+engine --profile fixture publish status --id pub_01</code></pre>
+          <h3 class="subhead">Generate <code>FEATURE_MAP.md</code> from feature-local files</h3>
+          <p>Each entry answers three questions from Tan’s slide. What feature exists? How does a user reach it? What observable result proves it works? Record the owner, command, fixture, and expected outcome. When the UI lands, add the route, accessible control name, and a stable selector where needed.</p>
+          <div class="table-wrap">
+            <table aria-label="Proposed feature map entries">
+              <thead><tr><th scope="col">Owner and action</th><th scope="col">CLI command</th><th scope="col">Planned UI</th><th scope="col">Fixture and result</th></tr></thead>
+              <tbody>
+                <tr><th scope="row">Sources · Add</th><td><code>source add</code></td><td><code>/sources/new</code> · Save source</td><td>Launch brief yields a saved source ID.</td></tr>
+                <tr><th scope="row">Drafts · Produce</th><td><code>produce</code></td><td><code>/sources/:id</code> · Produce</td><td>Saved brief yields a reviewable draft.</td></tr>
+                <tr><th scope="row">Drafts · Approve</th><td><code>draft approve</code></td><td><code>/drafts/:id</code> · Approve revision<br><code>data-testid="approve-revision"</code></td><td>Generated draft records approval against its revision ID.</td></tr>
+                <tr><th scope="row">Accounts · Connect</th><td><code>account connect</code></td><td><code>/settings/accounts</code> · Connect account</td><td>Provider callback records the test identity and permissions.</td></tr>
+                <tr><th scope="row">Publishing · Publish</th><td><code>publish</code></td><td><code>/drafts/:id</code> · Publish to X</td><td>Two requests for the approved draft return one job and one receipt.</td></tr>
+                <tr><th scope="row">Skills · Configure</th><td><code>skill import</code>, <code>skill test</code>, <code>skill set-default</code></td><td><code>/settings/skills</code> · Save revision, Run test, Set default</td><td>Both runners render the same published skill revision’s fixture to a playable video. Changing the default affects the next job.</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <h3 class="subhead">Drive the real app and capture proof</h3>
+          <p>The product CLI exercises server behavior first. When the browser UI exists, give agents an app driver they can run from the command line. The feature map tells them which control to activate and which result to verify. These example driver commands are planned.</p>
+          <pre class="code-block" aria-label="Planned browser verification commands"><code>app aria-click --accessible-name "Produce"
+app snapshot
+app screenshot proof.png</code></pre>
+          <p>Start from a saved-source fixture. Assert that the action starts a job and produces a reviewable draft. Capture the accessibility snapshot and screenshot as evidence for the change.</p>
+          <p class="refs"><a href="https://ai.engineer/code/2026/talks/lauren-tan">Tan’s runtime verification example</a><a href="https://github.com/cursor/plugins/tree/main/pstack/skills/create-verification-skill">pstack verification skill</a></p>
+          <p class="fine">As features land, add strict type checks, app lint rules, and feature-map regeneration to CI. Drive the product CLI against fixtures for stale approval, wrong account, double clicks, and a provider response lost after create. Use the browser driver for the same review-to-publish flow.</p>
+          <h3 class="subhead">Budget for verification</h3>
+          <p>In the talk, Tan cites Cindy’s estimate that verification takes 70% of her daily tokens. Tan says most of her own token use also goes to verification. Budget for running the app, checking failure paths, and collecting evidence in each build milestone.</p>
+          <p class="refs"><a href="https://www.youtube.com/watch?v=ZZ19zhYnDKY&amp;t=4395s">Token use in Tan’s talk</a></p>
+          <div class="split">
+            <div class="card">
+              <h3>Formal verification</h3>
+              <p>Use TLA+ to model publish and retry states. Check that a job requires approval of the exact revision and that an unknown provider outcome triggers reconciliation before another create attempt. Consider a Lean proof for a specific implementation property with a precise specification.</p>
+              <p class="refs"><a href="https://www.youtube.com/watch?v=ZZ19zhYnDKY&amp;t=4334s">TLA+ and Lean in Tan’s talk</a></p>
+            </div>
+            <div class="card">
+              <h3>Property-based UI testing</h3>
+              <p>After the browser workflow lands, try Bombadil with test accounts and simulated providers. Generate sequences of clicks, edits, and reconnects. Check that an edited revision needs fresh approval and repeated Publish clicks lead to one job.</p>
+              <p class="refs"><a href="https://github.com/antithesishq/bombadil">Bombadil</a></p>
+            </div>
+          </div>
+          <h3 class="subhead">Apply Tan’s trust pyramid</h3>
+          <ol class="milestones" aria-label="Trust layers in order of rising review cost">
+            <li><strong>Codebase</strong><span>Make the supported action easy through folder structure and API design.</span></li>
+            <li><strong>Static analysis</strong><span>Catch prohibited imports, types, and patterns with checks that fail in CI.</span></li>
+            <li><strong>Verification</strong><span>Exercise the real app and model important state transitions.</span></li>
+            <li><strong>Prose</strong><span>Keep repository instructions and skills for decisions that need judgment.</span></li>
+            <li><strong>Human review</strong><span>Review the behavior and evidence for changes that need human judgment.</span></li>
+          </ol>
+          <p class="refs"><a href="https://www.youtube.com/watch?v=ZZ19zhYnDKY&amp;t=3807s">Trust pyramid in Tan’s talk</a></p>
+        </section>
+        <section id="analytics" aria-labelledby="analytics-title">
+          <span class="eyebrow">Stage 2</span>
+          <h2 id="analytics-title">Find the bottleneck after publishing</h2>
+          <p class="intro">Use each publication receipt to sync metrics for its provider content ID. Store the provider metric name, definition, reporting window, and last successful sync. Request read permissions for each connected account as needed and distinguish a measured zero from delayed, unavailable, or unauthorized data.</p>
+          <div class="table-wrap">
+            <table class="metric-table" aria-label="Analytics by platform">
+              <thead><tr><th scope="col">Platform</th><th scope="col">Signals and access to verify</th></tr></thead>
+              <tbody>
+                <tr><th scope="row">LinkedIn</th><td>Use impressions, link clicks, and comments where member post access supports them. Page shares expose a separate click count. Test native article IDs and metric access directly, and link to LinkedIn analytics when API data is unavailable.<div class="refs"><a href="https://learn.microsoft.com/en-us/linkedin/marketing/community-management/members/post-statistics?view=li-lms-2026-09">Member statistics</a><a href="https://learn.microsoft.com/en-us/linkedin/marketing/community-management/organizations/share-statistics?view=li-lms-2026-09">Page statistics</a><a href="https://www.linkedin.com/help/lms/answer/a516971/linkedin-post-video-and-published-article-analytics-overview">Article analytics</a></div></td></tr>
+                <tr><th scope="row">X</th><td>Track impressions, replies, and owner-authorized URL clicks. Collect the private click counts within the documented 30-day availability window.<div class="refs"><a href="https://docs.x.com/x-api/fundamentals/metrics">X metrics and access windows</a></div></td></tr>
+                <tr><th scope="row">YouTube</th><td>Show views, comments, watch duration, retention, and thumbnail impression click-through rate where available. If an owned destination measures outbound link traffic, label it as first-party data. Use YouTube's native metrics under the provider's data policies.<div class="refs"><a href="https://developers.google.com/youtube/analytics/metrics">Analytics metrics</a><a href="https://developers.google.com/youtube/reporting/v1/reports/channel_reports#reach-reports">Reach reports</a><a href="https://developers.google.com/youtube/terms/developer-policies">Developer policies</a></div></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="split">
+            <figure class="card" aria-labelledby="chart-caption">
+              <figcaption id="chart-caption"><h3>Production funnel</h3><span class="fine">Illustrative counts for the same cohort of drafts</span></figcaption>
+              <ul class="bars" role="list">
+                <li><span>Drafted</span><span class="track" aria-hidden="true"><span class="fill" style="--value: 100%"></span></span><strong>24</strong></li>
+                <li><span>Approved</span><span class="track" aria-hidden="true"><span class="fill" style="--value: 75%"></span></span><strong>18</strong></li>
+                <li><span>Published</span><span class="track" aria-hidden="true"><span class="fill" style="--value: 66.667%"></span></span><strong>16</strong></li>
+              </ul>
+              <p class="fine subhead">The largest drop is from draft to approval.</p>
+            </figure>
+            <div class="card">
+              <h3>Audience charts</h3>
+              <p>Compare reach and views at the same content age within a platform and format. Plot clicks and comments as parallel outcomes. On YouTube, use thumbnail CTR to inspect the title and thumbnail, and retention to see where viewers leave.</p>
+              <p>Let the reviewer open the original publication and trace it to the source and approved revision.</p>
+            </div>
+          </div>
+        </section>
+        <section id="delivery" aria-labelledby="delivery-title">
+          <h2 id="delivery-title">Build sequence and exit checks</h2>
+          <ol class="milestones">
+            <li><strong>Repository setup</strong><span>Run the existing import checks in GitHub Actions and set <strong>Repository checks</strong> as required. Add feature discovery, ownership checks, shared design tokens, locale catalogs, and feature-map generation as the corresponding code lands.</span></li>
+            <li><strong>CLI vertical slice</strong><span>Set up the runtime folders and lint rules. Run the X fixture from brief to receipt and map each command to its planned UI and observable result. Then add LinkedIn export and test the same saved video skill and assets through both SDK runners.</span></li>
+            <li><strong>Stage 1 release</strong><span>Wire the browser to the same commands. Verify that skill edits and runner defaults survive reload and that an existing job keeps its selected revision. Demonstrate real X publishing, YouTube upload through processing, and the LinkedIn editor handoff. Verify native LinkedIn one-click publishing with a successful API publication of a full article.</span></li>
+            <li><strong>Stage 2 release</strong><span>Sync permitted metrics for known published IDs, rerun a sync without duplicating observations, and trace a chart value to its provider and time window. Verify delayed data and a revoked connection in the dashboard.</span></li>
+          </ol>
+        </section>
+      </main>
+    </div>
+  </div>
+  <footer>
+    <div class="footer-inner">
+      <p>The supplied Lauren Tan workshop notes and screenshot inform feature ownership, enforced boundaries, reserved files, and runtime verification. The product stages and delivery checks come from the marketing engine brief.</p>
+      <p>Platform documentation checked <time datetime="2026-11-13">November 13, 2026</time>.</p>
+    </div>
+  </footer>
+</body>
+</html>
