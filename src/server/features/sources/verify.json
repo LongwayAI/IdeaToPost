@@ -1,0 +1,3 @@
+[
+  { "action": "Add source", "command": "source add --file fixtures/launch.md", "route": "/sources/new", "control": "Save source", "proof": "The fixture returns a source ID that a later CLI process can use.", "status": "Fixture CLI" }
+]

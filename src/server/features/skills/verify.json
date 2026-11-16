@@ -1,0 +1,3 @@
+[
+  { "action": "Configure video skill", "command": "skill import, skill test, skill set-default", "route": "/settings/skills", "control": "Save revision, Run test, Set default", "proof": "The saved package passes through both runners. Reopening settings preserves it. Changing the default leaves an existing job pinned to its original revision.", "status": "Planned" }
+]

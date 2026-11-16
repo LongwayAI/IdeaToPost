@@ -112,9 +112,21 @@ test('JavaScript JSDoc type imports obey the same boundary', async t => {
   });
 
   const messages = await lintMessages(root);
-  assert.equal(messages.length, 1);
-  assert.equal(messages[0].ruleId, 'architecture/import-boundary');
+  assert.ok(messages.some(message => message.ruleId === 'architecture/import-boundary'));
   const result = runAnalyzer(root);
   assert.equal(result.status, 1);
   assert.match(result.stderr, /src\/web\/view\.js -> src\/server\/store\.ts/);
+});
+
+test('lint rejects React effect imports and source comments while allowing named hooks and URL strings', async t => {
+  const root = fixture(t, {
+    'src/web/view.tsx': 'import { useEffect as sync } from "react";\n// A workaround\nexport const name = sync;',
+    'src/web/namespace.tsx': 'import * as React from "react"; export const effect = React.useEffect;',
+    'src/web/valid.tsx': 'import { useState } from "react"; export const data = [useState, "https://example.com"];',
+  });
+
+  const messages = await lintMessages(root);
+  assert.deepEqual(messages.map(message => message.ruleId).sort(), [
+    'architecture/no-source-comments', 'no-restricted-imports', 'no-restricted-imports',
+  ]);
 });

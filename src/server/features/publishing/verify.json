@@ -1,0 +1,4 @@
+[
+  { "action": "Publish to fixture X account", "command": "publish --revision <id> --account x_demo", "route": "/drafts/:id", "control": "Publish to X", "proof": "Unapproved revisions fail. Repeating a valid request returns the same simulated receipt.", "status": "Fixture CLI" },
+  { "action": "Read publication status", "command": "publish status --id <id>", "route": "/drafts/:id", "control": "Publication status", "proof": "The receipt matches the selected revision and account across processes.", "status": "Fixture CLI" }
+]

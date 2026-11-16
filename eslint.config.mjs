@@ -46,10 +46,35 @@ const importBoundary = {
   },
 };
 
+const sourceComments = {
+  meta: { schema: [], messages: { comment: 'Use clear names and types. Put design rationale in Markdown.' } },
+  create(context) {
+    return {
+      Program() {
+        for (const comment of context.sourceCode.getAllComments()) {
+          if (comment.type !== 'Shebang') context.report({ loc: comment.loc, messageId: 'comment' });
+        }
+      },
+    };
+  },
+};
+
 export default [{
   files: ['src/**/*.{js,jsx,cjs,mjs,ts,tsx,mts,cts}'],
   languageOptions: { parser },
   linterOptions: { noInlineConfig: true },
-  plugins: { architecture: { rules: { 'import-boundary': importBoundary } } },
-  rules: { 'architecture/import-boundary': 'error' },
+  plugins: { architecture: { rules: { 'import-boundary': importBoundary, 'no-source-comments': sourceComments } } },
+  rules: {
+    'architecture/import-boundary': 'error',
+    'architecture/no-source-comments': 'error',
+    'no-restricted-imports': ['error', { paths: [{
+      name: 'react',
+      importNames: ['default', 'useEffect'],
+      message: 'Use named React imports. Load data in route loaders and handle mutations in actions or event handlers.',
+    }] }],
+    'no-restricted-syntax': ['error', {
+      selector: 'ImportExpression[source.value="react"], CallExpression[callee.name="require"][arguments.0.value="react"], TSExternalModuleReference[expression.value="react"]',
+      message: 'Load React through named static imports.',
+    }],
+  },
 }];

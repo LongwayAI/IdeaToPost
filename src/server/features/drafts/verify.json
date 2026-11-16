@@ -1,0 +1,7 @@
+[
+  { "action": "Produce X draft", "command": "produce --source <id> --platform x --wait", "route": "/sources/:id", "control": "Produce", "proof": "The saved source yields an unapproved revision with reviewable X copy.", "status": "Fixture CLI" },
+  { "action": "Show X draft", "command": "draft show --revision <id>", "route": "/drafts/:id", "control": "Draft preview", "proof": "A separate process reads the same revision and text.", "status": "Fixture CLI" },
+  { "action": "Approve revision", "command": "draft approve --revision <id>", "route": "/drafts/:id", "control": "Approve revision", "proof": "Approval is recorded for the revision ID shown in the preview.", "status": "Fixture CLI" },
+  { "action": "Produce LinkedIn article", "command": "produce --source <id> --platform linkedin", "route": "/sources/:id", "control": "Produce", "proof": "The saved source yields a complete article that can open in the LinkedIn editor.", "status": "Planned" },
+  { "action": "Produce YouTube video", "command": "produce --source <id> --platform youtube", "route": "/sources/:id", "control": "Produce", "proof": "The selected skill revision and runner produce a playable MP4 with source-derived content.", "status": "Planned" }
+]

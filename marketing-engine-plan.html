@@ -150,7 +150,7 @@
   <header class="top">
     <div class="top-inner">
       <div class="brand"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span>LongwayAI</div>
-      <a class="repo" href="https://github.com/LongwayAI/marketing-engine">GitHub repository ↗</a>
+      <a class="repo" href="https://github.com/LongwayAI/IdeaToPost">GitHub repository ↗</a>
     </div>
   </header>
   <div class="page">
@@ -314,11 +314,11 @@ FEATURE_MAP.md</code></pre>
             </div>
             <div>
               <h3>Ban React <code>useEffect</code></h3>
-              <p>Use route loaders and actions, derived render state, event handlers, and <code>useSyncExternalStore</code> for external stores. Add a typed ESLint rule that traces direct, aliased, re-exported, and namespace references to React's export.</p>
+              <p>Use route loaders and actions, derived render state, event handlers, and <code>useSyncExternalStore</code> for external stores. ESLint requires named React imports and rejects imports and re-exports of <code>useEffect</code>, including aliases.</p>
             </div>
             <div>
               <h3>Ban comments in authored source</h3>
-              <p>Add an ESLint rule that rejects parser-reported comments in authored JS, JSX, TS, and TSX. Keep design rationale in Markdown and disable inline lint configuration. Review exceptions with a named owner, precise scope, and a removal condition.</p>
+              <p>ESLint rejects comments in authored JS and TS under <code>src/</code>, including JSX and TSX. Keep design rationale in Markdown. Review exceptions with a named owner, precise scope, and a removal condition.</p>
             </div>
           </div>
           <p class="fine">Tan's Dune example places features under <code>electron-renderer/</code> and desktop duties under <code>electron-main/</code>. Both use types from <code>shared/</code>. The marketing engine applies the same dependency rule to its browser and server. <a href="https://ai.engineer/code/2026/talks/lauren-tan">Tan’s AI Engineer talk</a></p>
@@ -332,7 +332,7 @@ FEATURE_MAP.md</code></pre>
         </section>
         <section id="cli" aria-labelledby="cli-title">
           <h2 id="cli-title">Make the CLI the first working interface</h2>
-          <p class="intro">Build the first end-to-end slice with a seeded X account, real persistence, and simulated provider responses. The example commands are the proposed CLI contract. Use the returned IDs and make the same output available as JSON for automated checks.</p>
+          <p class="intro">The first CLI slice uses SQLite and a simulated X account. Run <code>npm run --silent engine -- --help</code> after <code>npm ci</code>. In the examples, replace <code>engine</code> with <code>npm run --silent engine --</code> and use the IDs printed by preceding commands. Add <code>--json</code> for machine-readable output.</p>
           <pre class="code-block" aria-label="Proposed CLI acceptance flow"><code>engine --profile fixture source add --file fixtures/launch.md
 engine --profile fixture produce --source src_01 --platform x --wait
 engine --profile fixture draft show --revision rev_01
@@ -340,6 +340,7 @@ engine --profile fixture draft approve --revision rev_01
 engine --profile fixture publish --revision rev_01 --account x_demo
 engine --profile fixture publish status --id pub_01</code></pre>
           <h3 class="subhead">Generate <code>FEATURE_MAP.md</code> from feature-local files</h3>
+          <p>The <a href="./FEATURE_MAP.md">Phase 1 feature map</a> marks each action as available in the fixture CLI or planned. Run <code>npm run feature-map</code> after editing feature verification metadata.</p>
           <p>Each entry answers three questions from Tan’s slide. What feature exists? How does a user reach it? What observable result proves it works? Record the owner, command, fixture, and expected outcome. When the UI lands, add the route, accessible control name, and a stable selector where needed.</p>
           <div class="table-wrap">
             <table aria-label="Proposed feature map entries">
@@ -361,7 +362,7 @@ app snapshot
 app screenshot proof.png</code></pre>
           <p>Start from a saved-source fixture. Assert that the action starts a job and produces a reviewable draft. Capture the accessibility snapshot and screenshot as evidence for the change.</p>
           <p class="refs"><a href="https://ai.engineer/code/2026/talks/lauren-tan">Tan’s runtime verification example</a><a href="https://github.com/cursor/plugins/tree/main/pstack/skills/create-verification-skill">pstack verification skill</a></p>
-          <p class="fine">As features land, add strict type checks, app lint rules, and feature-map regeneration to CI. Drive the product CLI against fixtures for stale approval, wrong account, double clicks, and a provider response lost after create. Use the browser driver for the same review-to-publish flow.</p>
+          <p class="fine">The check command runs strict TypeScript, import and lint rules, feature-map freshness, and the fixture CLI. Add stale approval and lost provider response cases when draft edits and live publishing land. Use the browser driver for the same review-to-publish flow.</p>
           <h3 class="subhead">Budget for verification</h3>
           <p>In the talk, Tan cites Cindy’s estimate that verification takes 70% of her daily tokens. Tan says most of her own token use also goes to verification. Budget for running the app, checking failure paths, and collecting evidence in each build milestone.</p>
           <p class="refs"><a href="https://www.youtube.com/watch?v=ZZ19zhYnDKY&amp;t=4395s">Token use in Tan’s talk</a></p>
@@ -422,7 +423,7 @@ app screenshot proof.png</code></pre>
           <h2 id="delivery-title">Build sequence and exit checks</h2>
           <ol class="milestones">
             <li><strong>Repository setup</strong><span>Run the existing import checks in GitHub Actions and set <strong>Repository checks</strong> as required. Add feature discovery, ownership checks, shared design tokens, locale catalogs, and feature-map generation as the corresponding code lands.</span></li>
-            <li><strong>CLI vertical slice</strong><span>Set up the runtime folders and lint rules. Run the X fixture from brief to receipt and map each command to its planned UI and observable result. Then add LinkedIn export and test the same saved video skill and assets through both SDK runners.</span></li>
+            <li><strong>CLI vertical slice</strong><span>The runtime folders, initial lint rules, X fixture, and feature map are in place. Next, connect the first live model call, add LinkedIn export, and test the same saved video skill and assets through both SDK runners.</span></li>
             <li><strong>Stage 1 release</strong><span>Wire the browser to the same commands. Verify that skill edits and runner defaults survive reload and that an existing job keeps its selected revision. Demonstrate real X publishing, YouTube upload through processing, and the LinkedIn editor handoff. Verify native LinkedIn one-click publishing with a successful API publication of a full article.</span></li>
             <li><strong>Stage 2 release</strong><span>Sync permitted metrics for known published IDs, rerun a sync without duplicating observations, and trace a chart value to its provider and time window. Verify delayed data and a revoked connection in the dashboard.</span></li>
           </ol>

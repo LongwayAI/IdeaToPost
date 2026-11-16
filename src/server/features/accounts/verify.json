@@ -1,0 +1,3 @@
+[
+  { "action": "Connect account", "command": "account connect --platform <platform>", "route": "/settings/accounts", "control": "Connect account", "proof": "The OAuth callback records the expected account identity and permissions.", "status": "Planned" }
+]
